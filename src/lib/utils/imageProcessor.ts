@@ -342,8 +342,8 @@ export class ImageProcessor {
           const marker = buffer[offset];
           offset++;
 
-          // Check for SOF markers (0xC0-0xCF except 0xC4, 0xC8, 0xCC)
-          // SOF0 = 0xC0 (baseline DCT), SOF2 = 0xC2 (progressive DCT)
+          // Check for SOF0 (0xC0 - baseline DCT) and SOF2 (0xC2 - progressive DCT)
+          // These are the most common JPEG encoding modes
           if (marker === 0xc0 || marker === 0xc2) {
             // SOF marker found: length (2 bytes) + precision (1 byte) + height (2 bytes) + width (2 bytes)
             if (offset + 7 > buffer.length) {
