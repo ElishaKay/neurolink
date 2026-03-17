@@ -151,6 +151,234 @@ npx @juspay/neurolink generate "Write a launch plan for multimodal chat"
 
 Need a persistent workspace? Launch loop mode with `npx @juspay/neurolink loop` - [Learn more →](docs/features/cli-loop-sessions.md)
 
+## 📚 Quick Start Guide
+
+This guide will have you generating AI responses in under 5 minutes using either the SDK or CLI.
+
+### Installation
+
+Choose your preferred package manager:
+
+```bash
+# npm
+npm install @juspay/neurolink
+
+# pnpm (recommended)
+pnpm add @juspay/neurolink
+
+# yarn
+yarn add @juspay/neurolink
+
+# CLI only (no installation needed)
+npx @juspay/neurolink --help
+```
+
+### Configuration
+
+NeuroLink works with 13+ AI providers. You'll need at least one API key to get started:
+
+**Option 1: Interactive Setup (Recommended)**
+
+```bash
+# Run the setup wizard to configure providers
+pnpm dlx @juspay/neurolink setup
+```
+
+The wizard will guide you through:
+- Selecting your preferred AI providers
+- Validating API keys
+- Setting up configuration files
+
+**Option 2: Manual Configuration**
+
+Create a `.env` file in your project root:
+
+```bash
+# Choose one or more providers
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_AI_API_KEY=...
+```
+
+**Free Tier Options:**
+- **Google AI Studio**: Get a free API key at [aistudio.google.com](https://aistudio.google.com)
+- **Mistral AI**: Free tier available at [console.mistral.ai](https://console.mistral.ai)
+- **Ollama**: 100% free local models (requires [Ollama installation](https://ollama.ai))
+
+### Your First API Call (SDK)
+
+**Basic Text Generation:**
+
+```typescript
+import { NeuroLink } from "@juspay/neurolink";
+
+// Initialize with your preferred provider
+const neurolink = new NeuroLink({
+  defaultProvider: "google-ai", // or "openai", "anthropic", etc.
+});
+
+// Generate a response
+const result = await neurolink.generate({
+  prompt: "Explain quantum computing in simple terms",
+});
+
+console.log(result.text);
+```
+
+**Streaming Responses:**
+
+```typescript
+// Stream tokens in real-time
+for await (const token of neurolink.stream({
+  prompt: "Write a haiku about code",
+})) {
+  process.stdout.write(token);
+}
+```
+
+**Multimodal Input (Images + Text):**
+
+```typescript
+const result = await neurolink.generate({
+  input: {
+    text: "What's in this image?",
+    images: ["./photo.jpg"],
+  },
+});
+```
+
+**Using Tools:**
+
+```typescript
+// Built-in tools are automatically available
+const result = await neurolink.generate({
+  prompt: "What time is it and what files are in the current directory?",
+  // AI can call getCurrentTime and listDirectory tools
+});
+```
+
+### Your First API Call (CLI)
+
+**Basic Generation:**
+
+```bash
+# Simple text generation
+neurolink generate "Explain TypeScript generics"
+
+# Specify provider and model
+neurolink generate "Hello!" --provider openai --model gpt-4o
+
+# Stream responses
+neurolink stream "Write a story about AI" --provider anthropic
+```
+
+**Multimodal Input:**
+
+```bash
+# Analyze images
+neurolink generate "Describe this image" --image photo.jpg
+
+# Process PDFs
+neurolink generate "Summarize this document" --pdf report.pdf
+
+# Combine multiple file types
+neurolink generate "Analyze this data" --file data.xlsx --file config.json
+```
+
+**Interactive Loop Mode:**
+
+```bash
+# Start an interactive session with persistent context
+neurolink loop
+
+# Inside loop mode:
+> set provider anthropic
+> set model claude-opus-4
+> generate "Hello, Claude!"
+> history  # View conversation history
+> exit
+```
+
+### Common Use Cases
+
+**RAG (Retrieval-Augmented Generation):**
+
+```typescript
+// Automatically chunk, embed, and search documents
+const result = await neurolink.generate({
+  prompt: "What are the key features mentioned in the documentation?",
+  rag: {
+    files: ["./docs/guide.md", "./docs/api.md"],
+    chunkSize: 512,
+    topK: 5,
+  },
+});
+```
+
+**Structured Output with Zod:**
+
+```typescript
+import { z } from "zod";
+
+const schema = z.object({
+  name: z.string(),
+  age: z.number(),
+  email: z.string().email(),
+});
+
+const result = await neurolink.generate({
+  prompt: "Extract user info: John Doe, 30 years old, john@example.com",
+  schema,
+  output: { format: "json" },
+});
+
+// result.structured is fully typed!
+console.log(result.structured); // { name: "John Doe", age: 30, email: "john@example.com" }
+```
+
+**External MCP Servers (GitHub, Slack, etc.):**
+
+```typescript
+// Connect to GitHub MCP server
+await neurolink.addExternalMCPServer("github", {
+  command: "npx",
+  args: ["-y", "@modelcontextprotocol/server-github"],
+  transport: "stdio",
+  env: { GITHUB_TOKEN: process.env.GITHUB_TOKEN },
+});
+
+// AI can now interact with GitHub
+const result = await neurolink.generate({
+  prompt: 'Create an issue titled "Bug: login fails"',
+});
+```
+
+### Next Steps
+
+- **[Complete Documentation](https://docs.neurolink.ink)** - Comprehensive guides and API reference
+- **[Provider Setup Guide](docs/getting-started/provider-setup.md)** - Configure all 13 providers
+- **[SDK API Reference](docs/sdk/api-reference.md)** - Full TypeScript API documentation
+- **[CLI Command Reference](docs/cli/commands.md)** - Complete CLI documentation
+- **[Example Projects](docs/examples/)** - Real-world integration examples
+- **[Advanced Features](docs/advanced/)** - Middleware, observability, workflows
+
+### Troubleshooting
+
+**Issue: "Provider not configured"**
+- Run `neurolink setup` or add provider API key to `.env`
+
+**Issue: Rate limit errors**
+- Enable automatic failover: `new NeuroLink({ enableFailover: true })`
+- Configure multiple providers for redundancy
+
+**Issue: Large context overflows**
+- Enable auto-compaction: `contextCompaction: { enabled: true }`
+- Use `rag` option to search documents instead of sending full content
+
+Need help? Check our [Troubleshooting Guide](docs/reference/troubleshooting.md) or [open an issue](https://github.com/juspay/neurolink/issues).
+
+---
+
 ## 🌟 Complete Feature Set
 
 NeuroLink is a comprehensive AI development platform. Every feature below is production-ready and fully documented.
